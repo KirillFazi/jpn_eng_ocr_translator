@@ -1,12 +1,16 @@
 from transformers import MarianMTModel, MarianTokenizer
 import torch
 
-
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MODEL_NAME = 'Helsinki-NLP/opus-mt-ja-en'
 
 
 async def translator(extracted_text: str) -> str:
+    """
+    Translate the extracted text from Japanese to English
+    :param extracted_text: extracted text from the image using OCR
+    :return: translated English text
+    """
     model = MarianMTModel.from_pretrained(MODEL_NAME)
     tokenizer = MarianTokenizer.from_pretrained(MODEL_NAME)
 

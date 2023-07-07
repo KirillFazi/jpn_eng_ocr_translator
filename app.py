@@ -11,20 +11,32 @@ import uvicorn
 from ocr_core import ocr_core
 from translator import translator
 
-
 UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 SAVE_ALL_UPLOADS = False
 
-templates = Jinja2Templates(directory='templates')
+TEMPLATES = Jinja2Templates(directory='templates')
 
 
-def allowed_file(filename):
+def allowed_file(filename: str) -> bool:
+    """
+    Check if the file extension is allowed
+    :param filename: filename for checking
+    :return: True if the file extension is allowed, False otherwise
+    """
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def save_file(file_path: str, file, is_save_all: bool = False) -> str:
+    """
+    Save the file to the specified path and return the path
+    :param file_path:
+    :param file: file to save. In this case, it is a byte string
+    :param is_save_all: if True, save all files with the same name
+    and add prefix for all duplicates. If False, replace duplicate file names
+    :return: path to the saved file. If is_save_all is False, it is the same as file_path
+    """
     if is_save_all:
         i = 1
         while os.path.exists(file_path):
@@ -41,19 +53,29 @@ def save_file(file_path: str, file, is_save_all: bool = False) -> str:
 
 
 async def home_page(request):
+    """
+    Redirect to the upload page
+    :param request: incoming request. In this case, it's not used
+    :return: RedirectResponse to the upload page
+    """
     return RedirectResponse(url='/upload')
 
 
 async def upload_page(request):
+    """
+    Upload page. POST method is used for uploading files and GET method is used for rendering the page
+    :param request: incoming request. In this case we use it for getting the form data.
+    :return: TEMPLATES.TemplateResponse with the upload page
+    """
     if request.method == 'POST':
         form = await request.form()
         # check if there is a file in the request
         if 'file' not in form:
-            return templates.TemplateResponse('upload.html', {'request': request, 'msg': 'No file selected'})
+            return TEMPLATES.TemplateResponse('upload.html', {'request': request, 'msg': 'No file selected'})
         file = form['file']
         # if no file is selected
         if file.filename == '':
-            return templates.TemplateResponse('upload.html', {'request': request, 'msg': 'No file selected'})
+            return TEMPLATES.TemplateResponse('upload.html', {'request': request, 'msg': 'No file selected'})
 
         if allowed_file(file.filename):
             file_path = save_file(
@@ -69,22 +91,22 @@ async def upload_page(request):
 
             translated_text = await translator(extracted_text)
 
-            return templates.TemplateResponse('upload.html',
+            return TEMPLATES.TemplateResponse('upload.html',
                                               {'request': request, 'msg': 'Successfully processed',
                                                'extracted_text': translated_text,
                                                'img_src': file_path})
         else:
-            return templates.TemplateResponse('upload.html',
+            return TEMPLATES.TemplateResponse('upload.html',
                                               {'request': request, 'msg': 'Allowed file types are png, jpg, jpeg'})
     elif request.method == 'GET':
-        return templates.TemplateResponse('upload.html', {'request': request})
+        return TEMPLATES.TemplateResponse('upload.html', {'request': request})
 
-
-app = Starlette(debug=True, routes=[
-    Route('/', home_page),
-    Route('/upload', upload_page, methods=['GET', 'POST']),
-    Mount('/static', StaticFiles(directory='static'), name='static')
-])
 
 if __name__ == '__main__':
+    app = Starlette(debug=True, routes=[
+        Route('/', home_page),
+        Route('/upload', upload_page, methods=['GET', 'POST']),
+        Mount('/static', StaticFiles(directory='static'), name='static')
+    ])
+
     uvicorn.run(app, port=8000)
