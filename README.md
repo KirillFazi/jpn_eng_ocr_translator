@@ -34,10 +34,11 @@ pip install -r requirements.txt
 ```
 
 3. Download and install Tesseract 5 from the [official repository](https://github.com/tesseract-ocr/tesseract).
-4. Download japanese language data (jpn_vert.testdata, jpn.testdata) 
+4. Download japanese language data (jpn_vert.traineddata, jpn.traineddata) 
 for Tesseract 5 from the [official repository](https://github.com/tesseract-ocr/tessdata).
 5. Copy the downloaded files to the `tessdata` directory in the Tesseract installation directory. 
-Example: `C:\Program Files\Tesseract-OCR\tessdata`.
+Example: `C:\Program Files\Tesseract-OCR\tessdata`. If you have installed Tesseract in a different directory, 
+you should change the path in the `ocr_core.py` file.
 
 ## Usage
 
